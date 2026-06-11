@@ -113,6 +113,5 @@ function fetchProducts(data) {
   });
 }
 
-if(window.location.pathname == "/index.html") fetchApi();
+fetchApi();
 
-let params = new UrlSea(window.location.search)
