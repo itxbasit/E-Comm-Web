@@ -1,10 +1,11 @@
 // navbar.js - Simple navbar with login modal
+import { supabase } from "./utils.js";
 
-(function() {
+console.log(supabase);
+(function () {
+  // Navbar HTML
 
-    // Navbar HTML
-
-    const navbarHTML = `
+  const navbarHTML = `
 
         <nav class="bg-green-400 sticky top-0 z-20 w-full shadow-sm mb-8">
 
@@ -135,286 +136,229 @@
 
     `;
 
+  // Add navbar to page
 
+  document.body.insertAdjacentHTML("afterbegin", navbarHTML);
 
-    // Add navbar to page
+  // Modal elements
 
-    document.body.insertAdjacentHTML('afterbegin', navbarHTML);
+  const modal = document.getElementById("authModal");
 
+  const loginBtn = document.getElementById("loginModalBtn");
 
+  const closeBtn = document.getElementById("closeModalBtn");
 
-    // Modal elements
+  const loginTab = document.getElementById("loginTabBtn");
 
-    const modal = document.getElementById('authModal');
+  const signupTab = document.getElementById("signupTabBtn");
 
-    const loginBtn = document.getElementById('loginModalBtn');
+  const loginPanel = document.getElementById("loginPanel");
 
-    const closeBtn = document.getElementById('closeModalBtn');
+  const signupPanel = document.getElementById("signupPanel");
 
-    const loginTab = document.getElementById('loginTabBtn');
+  const loginBtnText = document.getElementById("loginBtnText");
 
-    const signupTab = document.getElementById('signupTabBtn');
+  // Check logged in user
 
-    const loginPanel = document.getElementById('loginPanel');
+  const user = localStorage.getItem("user");
 
-    const signupPanel = document.getElementById('signupPanel');
+  if (user) {
+    const userData = JSON.parse(user);
 
-    const loginBtnText = document.getElementById('loginBtnText');
-
-
-
-    // Check logged in user
-
-    const user = localStorage.getItem('user');
-
-    if (user) {
-
-        const userData = JSON.parse(user);
-
-        if (loginBtnText) loginBtnText.textContent = `Hi, ${userData.name}`;
-
-        if (loginBtn) {
-
-            loginBtn.classList.remove('bg-white', 'text-green-700');
-
-            loginBtn.classList.add('bg-green-700', 'text-white');
-
-        }
-
-    }
-
-
-
-    // Open modal - using flex to center
+    if (loginBtnText) loginBtnText.textContent = `Hi, ${userData.name}`;
 
     if (loginBtn) {
+      loginBtn.classList.remove("bg-white", "text-green-700");
 
-        loginBtn.onclick = () => {
-
-            modal.classList.remove('hidden');
-
-            modal.style.display = 'flex';
-
-            // Prevent body scrolling when modal is open
-
-            document.body.style.overflow = 'hidden';
-
-        };
-
+      loginBtn.classList.add("bg-green-700", "text-white");
     }
+  }
 
+  // Open modal - using flex to center
 
+  if (loginBtn) {
+    loginBtn.onclick = () => {
+      modal.classList.remove("hidden");
 
-    // Close modal function
+      modal.style.display = "flex";
 
-    function closeModalFunction() {
+      // Prevent body scrolling when modal is open
 
-        modal.classList.add('hidden');
+      document.body.style.overflow = "hidden";
+    };
+  }
 
-        modal.style.display = 'none';
+  // Close modal function
 
-        // Restore body scrolling
+  function closeModalFunction() {
+    modal.classList.add("hidden");
 
-        document.body.style.overflow = '';
+    modal.style.display = "none";
 
+    // Restore body scrolling
+
+    document.body.style.overflow = "";
+  }
+
+  // Close modal
+
+  if (closeBtn) {
+    closeBtn.onclick = closeModalFunction;
+  }
+
+  // Close modal when clicking on the backdrop (the blurred background)
+
+  if (modal) {
+    modal.onclick = (e) => {
+      if (e.target === modal) {
+        closeModalFunction();
+      }
+    };
+  }
+
+  // Close modal with Escape key
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && modal && !modal.classList.contains("hidden")) {
+      closeModalFunction();
     }
+  });
 
+  // Switch tabs
 
+  if (loginTab && signupTab) {
+    loginTab.onclick = () => {
+      loginTab.className =
+        "py-2 px-4 text-green-600 border-b-2 border-green-600 font-medium transition";
 
-    // Close modal
+      signupTab.className =
+        "py-2 px-4 text-gray-500 border-b-2 border-transparent hover:text-green-600 font-medium transition";
 
-    if (closeBtn) {
+      loginPanel.classList.remove("hidden");
 
-        closeBtn.onclick = closeModalFunction;
+      signupPanel.classList.add("hidden");
 
-    }
+      document.getElementById("modalTitle").textContent = "Login";
+    };
 
-    
+    signupTab.onclick = () => {
+      signupTab.className =
+        "py-2 px-4 text-green-600 border-b-2 border-green-600 font-medium transition";
 
-    // Close modal when clicking on the backdrop (the blurred background)
+      loginTab.className =
+        "py-2 px-4 text-gray-500 border-b-2 border-transparent hover:text-green-600 font-medium transition";
 
-    if (modal) {
+      signupPanel.classList.remove("hidden");
 
-        modal.onclick = (e) => {
+      loginPanel.classList.add("hidden");
 
-            if (e.target === modal) {
+      document.getElementById("modalTitle").textContent = "Sign Up";
+    };
+  }
 
-                closeModalFunction();
+  // Handle login
 
-            }
+  const loginForm = document.getElementById("loginForm");
 
-        };
+  if (loginForm) {
+    loginForm.onsubmit = (e) => {
+      e.preventDefault();
 
-    }
+      const email = document.getElementById("loginEmail").value;
 
+      const password = document.getElementById("loginPassword").value;
 
+      if (email && password) {
+        const userName = email.split("@")[0];
 
-    // Close modal with Escape key
+        localStorage.setItem("user", JSON.stringify({ name: userName, email }));
 
-    document.addEventListener('keydown', (e) => {
+        if (loginBtnText) loginBtnText.textContent = `Hi, ${userName}`;
 
-        if (e.key === 'Escape' && modal && !modal.classList.contains('hidden')) {
+        if (loginBtn) {
+          loginBtn.classList.remove("bg-white", "text-green-700");
 
-            closeModalFunction();
-
+          loginBtn.classList.add("bg-green-700", "text-white");
         }
 
-    });
+        closeModalFunction();
 
+        alert(`Welcome ${userName}!`);
 
+        loginForm.reset();
 
-    // Switch tabs
+        // Optional: refresh page to update navbar everywhere
 
-    if (loginTab && signupTab) {
+        // location.reload();
+      } else {
+        alert("Please fill in all fields");
+      }
+    };
+  }
 
-        loginTab.onclick = () => {
+  // Handle signup
 
-            loginTab.className = 'py-2 px-4 text-green-600 border-b-2 border-green-600 font-medium transition';
+  const signupForm = document.getElementById("signupForm");
 
-            signupTab.className = 'py-2 px-4 text-gray-500 border-b-2 border-transparent hover:text-green-600 font-medium transition';
+  if (signupForm) {
+    signupForm.onsubmit = (e) => {
+      e.preventDefault();
 
-            loginPanel.classList.remove('hidden');
+      const name = document.getElementById("signupName").value;
 
-            signupPanel.classList.add('hidden');
+      const email = document.getElementById("signupEmail").value;
 
-            document.getElementById('modalTitle').textContent = 'Login';
+      const password = document.getElementById("signupPassword").value;
 
-        };
+      if (name && email && password) {
+        console.log(name, email, password);
+        // localStorage.setItem('user', JSON.stringify({ name, email }));
+        signUp(email, password, name);
+        // if (loginBtnText) loginBtnText.textContent = `Hi, ${name}`;
 
-        
+        // if (loginBtn) {
 
-        signupTab.onclick = () => {
+        //     loginBtn.classList.remove('bg-white', 'text-green-700');
 
-            signupTab.className = 'py-2 px-4 text-green-600 border-b-2 border-green-600 font-medium transition';
+        //     loginBtn.classList.add('bg-green-700', 'text-white');
 
-            loginTab.className = 'py-2 px-4 text-gray-500 border-b-2 border-transparent hover:text-green-600 font-medium transition';
+        // }
 
-            signupPanel.classList.remove('hidden');
+        // closeModalFunction();
 
-            loginPanel.classList.add('hidden');
+        // alert(`Account created! Welcome ${name}`);
 
-            document.getElementById('modalTitle').textContent = 'Sign Up';
+        // signupForm.reset();
 
-        };
+        // Optional: refresh page
 
-    }
+        // location.reload();
+      } else {
+        alert("Please fill in all fields");
+      }
+    };
+  }
 
+  // Mobile menu toggle
 
+  const mobileBtn = document.getElementById("mobileMenuBtn");
 
-    // Handle login
+  const navbarMenu = document.getElementById("navbarMenu");
 
-    const loginForm = document.getElementById('loginForm');
-
-    if (loginForm) {
-
-        loginForm.onsubmit = (e) => {
-
-            e.preventDefault();
-
-            const email = document.getElementById('loginEmail').value;
-
-            const password = document.getElementById('loginPassword').value;
-
-            if (email && password) {
-
-                const userName = email.split('@')[0];
-
-                localStorage.setItem('user', JSON.stringify({ name: userName, email }));
-
-                if (loginBtnText) loginBtnText.textContent = `Hi, ${userName}`;
-
-                if (loginBtn) {
-
-                    loginBtn.classList.remove('bg-white', 'text-green-700');
-
-                    loginBtn.classList.add('bg-green-700', 'text-white');
-
-                }
-
-                closeModalFunction();
-
-                alert(`Welcome ${userName}!`);
-
-                loginForm.reset();
-
-                // Optional: refresh page to update navbar everywhere
-
-                // location.reload();
-
-            } else {
-
-                alert('Please fill in all fields');
-
-            }
-
-        };
-
-    }
-
-
-
-    // Handle signup
-
-    const signupForm = document.getElementById('signupForm');
-
-    if (signupForm) {
-
-        signupForm.onsubmit = (e) => {
-
-            e.preventDefault();
-
-            const name = document.getElementById('signupName').value;
-
-            const email = document.getElementById('signupEmail').value;
-
-            const password = document.getElementById('signupPassword').value;
-
-            if (name && email && password) {
-
-                localStorage.setItem('user', JSON.stringify({ name, email }));
-
-                if (loginBtnText) loginBtnText.textContent = `Hi, ${name}`;
-
-                if (loginBtn) {
-
-                    loginBtn.classList.remove('bg-white', 'text-green-700');
-
-                    loginBtn.classList.add('bg-green-700', 'text-white');
-
-                }
-
-                closeModalFunction();
-
-                alert(`Account created! Welcome ${name}`);
-
-                signupForm.reset();
-
-                // Optional: refresh page
-
-                // location.reload();
-
-            } else {
-
-                alert('Please fill in all fields');
-
-            }
-
-        };
-
-    }
-
-
-
-    // Mobile menu toggle
-
-    const mobileBtn = document.getElementById('mobileMenuBtn');
-
-    const navbarMenu = document.getElementById('navbarMenu');
-
-    if (mobileBtn && navbarMenu) {
-
-        mobileBtn.onclick = () => navbarMenu.classList.toggle('hidden');
-
-    }
-
+  if (mobileBtn && navbarMenu) {
+    mobileBtn.onclick = () => navbarMenu.classList.toggle("hidden");
+  }
 })();
+
+async function signUp(email, password, username) {
+  try {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      user_metadata: { name: username },
+    });
+    console.log(data);
+  } catch (err) {
+    console.log(err);
+  }
+}
