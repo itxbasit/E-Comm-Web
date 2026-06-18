@@ -347,5 +347,5 @@ async function signIn(email, password) {
   loginBtn.classList.remove("bg-white", "text-green-700");
   loginBtn.classList.add("bg-green-700", "text-white");
   closeModalFunction();
-  // alert(`Welcome ${name}`);
+  alert(`Welcome ${user.user_metadata.full_name}`);
 }
