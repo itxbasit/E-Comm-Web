@@ -1,7 +1,21 @@
-// navbar.js - Simple navbar with login modal
 import { supabase } from "./utils.js";
 
-console.log(supabase);
+let modal = "";
+let signupForm = "";
+let loginForm = "";
+let loginBtn = "";
+let loginBtnText = "";
+
+function closeModalFunction() {
+  modal.classList.add("hidden");
+
+  modal.style.display = "none";
+
+  // Restore body scrolling
+
+  document.body.style.overflow = "";
+}
+
 (function () {
   // Navbar HTML
 
@@ -142,9 +156,7 @@ console.log(supabase);
 
   // Modal elements
 
-  const modal = document.getElementById("authModal");
-
-  const loginBtn = document.getElementById("loginModalBtn");
+  loginBtn = document.getElementById("loginModalBtn");
 
   const closeBtn = document.getElementById("closeModalBtn");
 
@@ -156,7 +168,7 @@ console.log(supabase);
 
   const signupPanel = document.getElementById("signupPanel");
 
-  const loginBtnText = document.getElementById("loginBtnText");
+  loginBtnText = document.getElementById("loginBtnText");
 
   // Check logged in user
 
@@ -175,7 +187,7 @@ console.log(supabase);
   }
 
   // Open modal - using flex to center
-
+  modal = document.getElementById("authModal");
   if (loginBtn) {
     loginBtn.onclick = () => {
       modal.classList.remove("hidden");
@@ -189,16 +201,6 @@ console.log(supabase);
   }
 
   // Close modal function
-
-  function closeModalFunction() {
-    modal.classList.add("hidden");
-
-    modal.style.display = "none";
-
-    // Restore body scrolling
-
-    document.body.style.overflow = "";
-  }
 
   // Close modal
 
@@ -258,7 +260,7 @@ console.log(supabase);
 
   // Handle login
 
-  const loginForm = document.getElementById("loginForm");
+  loginForm = document.getElementById("loginForm");
 
   if (loginForm) {
     loginForm.onsubmit = (e) => {
@@ -267,29 +269,8 @@ console.log(supabase);
       const email = document.getElementById("loginEmail").value;
 
       const password = document.getElementById("loginPassword").value;
-
       if (email && password) {
-        const userName = email.split("@")[0];
-
-        localStorage.setItem("user", JSON.stringify({ name: userName, email }));
-
-        if (loginBtnText) loginBtnText.textContent = `Hi, ${userName}`;
-
-        if (loginBtn) {
-          loginBtn.classList.remove("bg-white", "text-green-700");
-
-          loginBtn.classList.add("bg-green-700", "text-white");
-        }
-
-        closeModalFunction();
-
-        alert(`Welcome ${userName}!`);
-
-        loginForm.reset();
-
-        // Optional: refresh page to update navbar everywhere
-
-        // location.reload();
+        signIn(email, password);
       } else {
         alert("Please fill in all fields");
       }
@@ -297,9 +278,7 @@ console.log(supabase);
   }
 
   // Handle signup
-
-  const signupForm = document.getElementById("signupForm");
-
+  signupForm = document.getElementById("signupForm");
   if (signupForm) {
     signupForm.onsubmit = (e) => {
       e.preventDefault();
@@ -311,28 +290,8 @@ console.log(supabase);
       const password = document.getElementById("signupPassword").value;
 
       if (name && email && password) {
-        console.log(name, email, password);
         // localStorage.setItem('user', JSON.stringify({ name, email }));
         signUp(email, password, name);
-        // if (loginBtnText) loginBtnText.textContent = `Hi, ${name}`;
-
-        // if (loginBtn) {
-
-        //     loginBtn.classList.remove('bg-white', 'text-green-700');
-
-        //     loginBtn.classList.add('bg-green-700', 'text-white');
-
-        // }
-
-        // closeModalFunction();
-
-        // alert(`Account created! Welcome ${name}`);
-
-        // signupForm.reset();
-
-        // Optional: refresh page
-
-        // location.reload();
       } else {
         alert("Please fill in all fields");
       }
@@ -350,15 +309,43 @@ console.log(supabase);
   }
 })();
 
-async function signUp(email, password, username) {
-  try {
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      user_metadata: { name: username },
-    });
-    console.log(data);
-  } catch (err) {
-    console.log(err);
+async function signUp(email, password, name) {
+  console.log(name);
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      data: {
+        full_name: name,
+      },
+    },
+  });
+
+  if (error) {
+    alert(error.message);
+    return;
   }
+  closeModalFunction();
+
+  alert(`Account created! Welcome ${name}`);
+
+  signupForm.reset();
+}
+
+async function signIn(email, password) {
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  });
+  if (error) {
+    alert(error.message);
+    return;
+  }
+
+  const { user, session } = data;
+  loginBtnText.textContent = `Hi, ${user.user_metadata.full_name}`;
+  loginBtn.classList.remove("bg-white", "text-green-700");
+  loginBtn.classList.add("bg-green-700", "text-white");
+  closeModalFunction();
+  // alert(`Welcome ${name}`);
 }
