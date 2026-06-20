@@ -5,6 +5,7 @@ let signupForm = "";
 let loginForm = "";
 let loginBtn = "";
 let loginBtnText = "";
+let loginBtnContainer = "";
 
 function closeModalFunction() {
   modal.classList.add("hidden");
@@ -59,7 +60,7 @@ function closeModalFunction() {
 
                         <li><a href="#" class="block mt-2 py-2 px-3 text-gray-800 rounded md:text-white md:p-0 hover:text-green-200">Contact</a></li>
 
-                        <li class="md:ml-4">
+                        <li id="loginBtnContainer" class="md:ml-4">
                             <button id="loginModalBtn" class="w-full md:w-auto flex items-center justify-center gap-2 bg-white text-green-700 font-semibold py-2 px-4 rounded-full shadow-md hover:bg-gray-100 transition">
 
                                 <i class="fas fa-user-circle"></i>
@@ -157,6 +158,7 @@ function closeModalFunction() {
   // Modal elements
 
   loginBtn = document.getElementById("loginModalBtn");
+  loginBtnContainer = document.getElementById("loginBtnContainer");
 
   const closeBtn = document.getElementById("closeModalBtn");
 
@@ -332,6 +334,27 @@ async function signUp(email, password, name) {
   signupForm.reset();
 }
 
+async function logOut() {
+  const { error } = await supabase.auth.signOut();
+  window.location.reload();
+}
+async function updateUIForLoggedInUser(user) {
+  loginBtnContainer.innerHTML = `<button id="dropdownNvbarButton" data-dropdown-toggle="dropdownNavbar" class="w-full md:w-auto flex items-center justify-center gap-2 bg-white text-green-700 font-semibold py-2 px-4 rounded-full shadow-md hover:bg-gray-100 transition">
+              ${user.user_metadata?.full_name} 
+              <svg class="w-4 h-4 ms-1.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 9-7 7-7-7"/></svg>
+          </button>
+          <!-- Dropdown menu -->
+          <div id="dropdownNavbar" class="z-10 hidden bg-neutral-primary-medium border border-default-medium rounded-base shadow-lg w-44">
+              <ul class="p-2 text-sm text-body font-medium" aria-labelledby="dropdownNvbarButton">
+                <li id="logoutBtn"  >
+                  <a href="#" class="inline-flex items-center w-full p-2 hover:bg-neutral-tertiary-medium hover:text-heading rounded">Sign out</a>
+                </li>
+              </ul>
+          </div>`;
+  let logoutBtn = document.getElementById("logoutBtn");
+  logoutBtn?.addEventListener("click", logOut);
+}
+
 async function signIn(email, password) {
   const { data, error } = await supabase.auth.signInWithPassword({
     email,
@@ -341,11 +364,26 @@ async function signIn(email, password) {
     alert(error.message);
     return;
   }
-
   const { user, session } = data;
-  loginBtnText.textContent = `Hi, ${user.user_metadata.full_name}`;
-  loginBtn.classList.remove("bg-white", "text-green-700");
-  loginBtn.classList.add("bg-green-700", "text-white");
+
+  updateUIForLoggedInUser(user);
   closeModalFunction();
   alert(`Welcome ${user.user_metadata.full_name}`);
 }
+
+(async function () {
+  const { data, error } = await supabase.auth.getSession();
+
+  let user = "";
+  console.log(data);
+  if (data.session) {
+    user = data.session.user;
+  }
+console.log(user);
+  if (error) {
+    await logOut();
+  }
+  if (user) {
+   await updateUIForLoggedInUser(user);
+  }
+})();
