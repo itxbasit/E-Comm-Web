@@ -146,8 +146,17 @@ function closePasswordModal() {
           </div>
           
           <form id="updateProfileForm">
-            <div class="mb-4">
-              
+            <div class="mb-4 flex justify-center">
+                 <div class="relative w-32 h-32">
+      <img src="" class="hidden w-full h-full object-cover rounded-full" id="imagePrev"/>
+      <div id="avatarContainer" class="w-full h-full bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center overflow-hidden">
+        <span class="text-5xl font-bold text-white">B</span>
+      </div>
+      <input type="file" accept="image/*" id="avatar" class="hidden"/>
+      <label for="avatar" class="absolute bottom-1 right-1 shadow-lg w-8 h-8 bg-white hover:bg-gray-100 flex items-center justify-center rounded-full cursor-pointer">
+        <i class="fa fa-camera"></i>
+      </label>
+    </div> 
             </div>
 
             <div class="mb-4">
@@ -207,7 +216,9 @@ function closePasswordModal() {
     "loginBtnContainerMobile",
   );
   const loginBtnMobile = document.getElementById("loginModalBtnMobile");
-
+  let imagePrev = document.getElementById("imagePrev");
+  let avatarContainer = document.getElementById("avatarContainer");
+  let avatar = document.getElementById("avatar");
   const closeBtn = document.getElementById("closeModalBtn");
   const loginTab = document.getElementById("loginTabBtn");
   const signupTab = document.getElementById("signupTabBtn");
@@ -235,7 +246,15 @@ function closePasswordModal() {
       loginBtn.classList.add("bg-green-700", "text-white");
     }
   }
+  avatar.addEventListener("change", function () {
+    const file = this.files[0];
 
+    const src = URL.createObjectURL(file);
+
+    imagePrev.src = src;
+    imagePrev.classList.remove("hidden");
+    avatarContainer.classList.add("hidden");
+  });
   modal = document.getElementById("authModal");
   if (loginBtn) {
     loginBtn.onclick = () => {
@@ -384,7 +403,7 @@ function closePasswordModal() {
     updateProfileForm.onsubmit = async (e) => {
       e.preventDefault();
       const name = document.getElementById("updateName").value;
-      const fileInput = document.getElementById("profileImage");
+      const fileInput = document.getElementById("avatar");
       await updateUserProfile(name, fileInput.files[0]);
     };
   }
@@ -452,8 +471,7 @@ async function updateUserProfile(name, imageFile) {
 
     // Upload image if provided
     if (imageFile) {
-      const fileExt = imageFile.name.split(".").pop();
-      const fileName = `${Date.now()}.${fileExt}`;
+      const fileName = `${Date.now()} - ${name}`;
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from("avatars")
         .upload(fileName, imageFile);
@@ -469,32 +487,22 @@ async function updateUserProfile(name, imageFile) {
       avatarUrl = publicUrl;
     }
 
-    // Update user metadata
-    const updates = {
-      data: {
-        full_name: name,
-        ...(avatarUrl && { avatar_url: avatarUrl }),
-      },
-    };
-
-    const { data, error } = await supabase.auth.updateUser(updates);
+    const { data, error } = await supabase.auth.updateUser({
+      data: { full_name: name, avatar_url: avatarUrl },
+    });
 
     if (error) {
       alert("Error updating profile: " + error.message);
       return;
     }
 
-    // Update local storage
-    const userData = {
-      name: name,
-      email: data.user.email,
-      ...(avatarUrl && { avatar_url: avatarUrl }),
-    };
-    localStorage.setItem("user", JSON.stringify(userData));
-
     closeProfileModal();
+    const { error: sessError } = await supabase.auth.getSession();
+    if (sessError) {
+      logOut();
+    }
     alert("Profile updated successfully!");
-    window.location.reload();
+    // window.location.reload();
   } catch (error) {
     alert("An error occurred while updating profile: " + error.message);
   }
@@ -676,9 +684,7 @@ function openPasswordModal() {
 
 async function signIn(email, password) {
   const signBtn = document.querySelector('#loginForm button[type="submit"]');
-  console.log(signBtn);
   const original = loader(signBtn);
-  console.log(original);
 
   try {
     const { data, error } = await supabase.auth.signInWithPassword({
@@ -687,7 +693,7 @@ async function signIn(email, password) {
     });
     if (error) {
       alert(error.message);
-      removeLoader(signBtn, original)
+      removeLoader(signBtn, original);
       return;
     }
     const { user, session } = data;
@@ -698,7 +704,7 @@ async function signIn(email, password) {
   } catch (err) {
     alert(error.message);
   } finally {
-    removeLoader(signBtn, original)
+    removeLoader(signBtn, original);
   }
 }
 

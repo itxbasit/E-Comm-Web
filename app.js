@@ -14,6 +14,8 @@ async function fetchApi(skip = 0, limit = 15) {
   }
 }
 
+
+
 function createPagination(totalPage, skip, currPage) {
   let paginationHTML =
     skip == 0
